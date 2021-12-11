@@ -3,18 +3,21 @@ import "./App.css";
 import SingleCard from "./components/SingleCard";
 
 const cardImages = [
-  { src: "/img/helmet-1.png" },
-  { src: "/img/potion-1.png" },
-  { src: "/img/ring-1.png" },
-  { src: "/img/scroll-1.png" },
-  { src: "/img/shield-1.png" },
-  { src: "/img/sword-1.png" },
+  { src: "/img/helmet-1.png", matched: false },
+  { src: "/img/potion-1.png", matched: false },
+  { src: "/img/ring-1.png", matched: false },
+  { src: "/img/scroll-1.png", matched: false },
+  { src: "/img/shield-1.png", matched: false },
+  { src: "/img/sword-1.png", matched: false },
 ];
 
 function App() {
   const [cards, setCards] = useState([]);
   const [turns, setTurns] = useState(0);
+  const [choiceOne, setChoiceOne] = useState(null);
+  const [choiceTwo, setChoiceTwo] = useState(null);
 
+  // suffle cards
   const suffleCard = () => {
     const suffeledCard = [...cardImages, ...cardImages]
       .sort(() => Math.random() - 0.5)
@@ -24,11 +27,50 @@ function App() {
     setTurns(0);
   };
 
-  useEffect(() => {
-    suffleCard();
-  }, []);
+  // handle a choice
+  const handleChoice = (card) => {
+    if (choiceOne && card.id === choiceOne.id) {
+      console.log("you chose the same card!");
+    } else {
+      choiceOne ? setChoiceTwo(card) : setChoiceOne(card);
+    }
+  };
 
-  console.log(cards, turns);
+  // reset choices and increase turn
+  const resetTurn = () => {
+    setChoiceOne(null);
+    setChoiceTwo(null);
+    setTurns((prevTurns) => prevTurns + 1);
+  };
+
+  const checkMatch = () => {
+    if (choiceOne && choiceTwo) {
+      if (choiceOne.src === choiceTwo.src) {
+        setCards((prevCards) => {
+          return prevCards.map((card) => {
+            if (card.src === choiceOne.src) {
+              return { ...card, matched: true };
+            } else {
+              return card;
+            }
+          });
+        });
+        console.log("Match!");
+        resetTurn();
+      } else {
+        console.log("Not Match!");
+        setTimeout(() => {
+          resetTurn();
+        }, 1000);
+      }
+    }
+  };
+
+  // compare 2 selected cards
+  useEffect(() => {
+    // suffleCard();
+    checkMatch();
+  }, [choiceOne, choiceTwo]);
 
   return (
     <div className="App">
@@ -37,9 +79,15 @@ function App() {
 
       <div className="card-grid">
         {cards.map((card) => (
-          <SingleCard card={card} key={card.id} />
+          <SingleCard
+            card={card}
+            key={card.id}
+            handleChoice={handleChoice}
+            flipped={card === choiceOne || card === choiceTwo || card.matched}
+          />
         ))}
       </div>
+      <p>Turn = {turns}</p>
     </div>
   );
 }
